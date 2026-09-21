@@ -307,6 +307,16 @@ st.markdown(
 )
 
 # ----------------- アクティブフィルターチップ -----------------
+def _remove_filter_value(skey, val):
+    """on_clickコールバック内で実行 = ウィジェット再生成より前に安全にsession_stateを更新できる"""
+    st.session_state[skey] = [v for v in st.session_state[skey] if v != val]
+
+
+def _clear_all_filters():
+    st.session_state['selected_countries'] = []
+    st.session_state['selected_hs'] = []
+
+
 chip_items = [("selected_countries", c) for c in selected_countries] + \
              [("selected_hs", h) for h in selected_hs]
 
@@ -318,13 +328,14 @@ if chip_items:
         cols = st.columns(len(row_items))
         for col, (skey, val) in zip(cols, row_items):
             with col:
-                if st.button(f"{val}  ✕", key=f"chip_{skey}_{val}", use_container_width=True):
-                    st.session_state[skey] = [v for v in st.session_state[skey] if v != val]
-                    st.rerun()
-    if st.button("すべて解除", key="clear_all_chips"):
-        st.session_state['selected_countries'] = []
-        st.session_state['selected_hs'] = []
-        st.rerun()
+                st.button(
+                    f"{val}  ✕",
+                    key=f"chip_{skey}_{val}",
+                    use_container_width=True,
+                    on_click=_remove_filter_value,
+                    args=(skey, val)
+                )
+    st.button("すべて解除", key="clear_all_chips", on_click=_clear_all_filters)
     st.write("")
 
 # 年次データの集計（KPI・推移タブ共通）
