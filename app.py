@@ -148,18 +148,78 @@ st.markdown(f"""
     .stTabs [data-baseweb="tab-border"] {{
         display: none;
     }}
+
+    /* KPIの前年比デルタ */
+    .kpi-delta {{
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.80rem;
+        font-weight: 700;
+        margin-top: 8px;
+        padding: 2px 8px;
+        border-radius: 999px;
+    }}
+    .delta-up {{ color: {SURPLUS_COLOR}; background: rgba(22,163,74,0.10); }}
+    .delta-down {{ color: {DEFICIT_COLOR}; background: rgba(220,38,38,0.10); }}
+    .delta-flat {{ color: {TEXT_MUTED}; background: rgba(107,114,128,0.10); }}
+
+    /* フィルターチップ */
+    .filter-chip-label {{
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: {TEXT_MUTED};
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 6px;
+    }}
+    .stButton > button {{
+        border-radius: 999px;
+        border: 1px solid {GRID_COLOR};
+        background-color: #FFFFFF;
+        color: #374151;
+        font-size: 0.82rem;
+        font-weight: 600;
+        padding: 2px 6px;
+        transition: all 0.15s ease;
+    }}
+    .stButton > button:hover {{
+        border-color: {EXPORT_COLOR};
+        color: {EXPORT_COLOR};
+    }}
 </style>
 <div id="top-anchor"></div>
 <a href="#top-anchor" class="scroll-top-btn" title="最上部へ戻る">↑</a>
 """, unsafe_allow_html=True)
 
 
-def kpi_card(label, value, sub=""):
+DELTA_ARROW = {"up": "▲", "down": "▼", "flat": "ー"}
+DELTA_CLASS = {"up": "delta-up", "down": "delta-down", "flat": "delta-flat"}
+
+
+def calc_delta(curr, prev):
+    """前年比の方向とラベルを計算。比較対象がなければNoneを返す。"""
+    if prev is None or prev == 0:
+        return None
+    pct = (curr - prev) / abs(prev) * 100
+    direction = "up" if pct > 0.05 else ("down" if pct < -0.05 else "flat")
+    return direction, f"前年比 {pct:+.1f}%"
+
+
+def kpi_card(label, value, sub="", delta=None):
+    delta_html = ""
+    if delta is not None:
+        direction, delta_text = delta
+        delta_html = (
+            f'<div class="kpi-delta {DELTA_CLASS[direction]}">'
+            f'{DELTA_ARROW[direction]} {delta_text}</div>'
+        )
     st.markdown(f"""
     <div class="kpi-card">
         <div class="kpi-label">{label}</div>
         <div class="kpi-value">{value}</div>
         <div class="kpi-sub">{sub}</div>
+        {delta_html}
     </div>
     """, unsafe_allow_html=True)
 
@@ -246,6 +306,27 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+# ----------------- アクティブフィルターチップ -----------------
+chip_items = [("selected_countries", c) for c in selected_countries] + \
+             [("selected_hs", h) for h in selected_hs]
+
+if chip_items:
+    st.markdown('<div class="filter-chip-label">絞り込み中のフィルター（クリックで解除）</div>', unsafe_allow_html=True)
+    CHIPS_PER_ROW = 7
+    for row_start in range(0, len(chip_items), CHIPS_PER_ROW):
+        row_items = chip_items[row_start:row_start + CHIPS_PER_ROW]
+        cols = st.columns(len(row_items))
+        for col, (skey, val) in zip(cols, row_items):
+            with col:
+                if st.button(f"{val}  ✕", key=f"chip_{skey}_{val}", use_container_width=True):
+                    st.session_state[skey] = [v for v in st.session_state[skey] if v != val]
+                    st.rerun()
+    if st.button("すべて解除", key="clear_all_chips"):
+        st.session_state['selected_countries'] = []
+        st.session_state['selected_hs'] = []
+        st.rerun()
+    st.write("")
+
 # 年次データの集計（KPI・推移タブ共通）
 annual_exp = df_filtered[df_filtered['輸出入区分'] == '輸出'].groupby('年')['年間累計_金額_千円'].sum() / UNIT_DIVISOR
 annual_imp = df_filtered[df_filtered['輸出入区分'] == '輸入'].groupby('年')['年間累計_金額_千円'].sum() / UNIT_DIVISOR
@@ -261,15 +342,26 @@ if latest_year:
     badge_html = (f'<span class="badge-surplus">黒字</span>' if latest_net >= 0
                   else f'<span class="badge-deficit">赤字</span>')
 
+    prev_year = valid_years[1] if len(valid_years) > 1 else None
+    prev_exp = annual_exp.get(prev_year, 0) if prev_year else None
+    prev_imp = annual_imp.get(prev_year, 0) if prev_year else None
+    prev_net = (prev_exp - prev_imp) if prev_year else None
+    prev_status_text = ""
+    if prev_year is not None:
+        prev_status_text = f"前年（{prev_year}年）: " + ("黒字" if prev_net >= 0 else "赤字")
+
     k1, k2, k3, k4 = st.columns(4)
     with k1:
-        kpi_card("総輸出額", f"{latest_exp:,.0f} 億円", f"{latest_year}年")
+        kpi_card("総輸出額", f"{latest_exp:,.0f} 億円", f"{latest_year}年",
+                  delta=calc_delta(latest_exp, prev_exp))
     with k2:
-        kpi_card("総輸入額", f"{latest_imp:,.0f} 億円", f"{latest_year}年")
+        kpi_card("総輸入額", f"{latest_imp:,.0f} 億円", f"{latest_year}年",
+                  delta=calc_delta(latest_imp, prev_imp))
     with k3:
-        kpi_card("貿易収支（輸出－輸入）", f"{latest_net:+,.0f} 億円", f"{latest_year}年")
+        kpi_card("貿易収支（輸出－輸入）", f"{latest_net:+,.0f} 億円", f"{latest_year}年",
+                  delta=calc_delta(latest_net, prev_net))
     with k4:
-        kpi_card("収支判定", badge_html, f"{latest_year}年時点")
+        kpi_card("収支判定", badge_html, prev_status_text)
 
 st.write("")
 
