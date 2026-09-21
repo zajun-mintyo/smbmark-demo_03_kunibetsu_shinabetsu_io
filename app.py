@@ -113,6 +113,41 @@ st.markdown(f"""
         transform: translateY(-3px);
     }}
     #top-anchor {{ position: absolute; top: 0; left: 0; }}
+
+    /* タブ：セグメントコントロール風に強調 */
+    .stTabs [data-baseweb="tab-list"] {{
+        gap: 4px;
+        background-color: {GRID_COLOR};
+        padding: 6px;
+        border-radius: 12px;
+        margin-bottom: 4px;
+    }}
+    .stTabs [data-baseweb="tab"] {{
+        height: 46px;
+        border-radius: 8px;
+        padding: 0 22px;
+        background-color: transparent;
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: {TEXT_MUTED};
+        border: none;
+        transition: all 0.15s ease;
+    }}
+    .stTabs [data-baseweb="tab"]:hover {{
+        color: #111827;
+        background-color: rgba(255,255,255,0.6);
+    }}
+    .stTabs [aria-selected="true"] {{
+        background-color: #FFFFFF !important;
+        color: {EXPORT_COLOR} !important;
+        box-shadow: 0 1px 4px rgba(15,23,42,0.10);
+    }}
+    .stTabs [data-baseweb="tab-highlight"] {{
+        background-color: transparent;
+    }}
+    .stTabs [data-baseweb="tab-border"] {{
+        display: none;
+    }}
 </style>
 <div id="top-anchor"></div>
 <a href="#top-anchor" class="scroll-top-btn" title="最上部へ戻る">↑</a>
