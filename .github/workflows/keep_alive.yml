@@ -1,0 +1,54 @@
+name: Keep Streamlit App Alive
+
+on:
+  schedule:
+    # 12時間ごとに自動実行（UTC 0:00と12:00 ＝ 日本時間 9:00と21:00）
+    - cron: '0 */12 * * *'
+  # GitHubの「Actions」タブから手動でテスト実行できるようにするトリガー
+  workflow_dispatch:
+
+# 【重要バグ対策1】リポジトリへのプッシュ（書き込み）権限を明示的に付与
+permissions:
+  contents: write
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. リポジトリの最新コード（mainブランチ）を取得
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      # 2. requirements.txt の安全な更新
+      - name: requirements.txtのタイムスタンプを更新
+        run: |
+          # 【重要バグ対策2】ファイル末尾が改行で終わっていない場合、改行を補正（パッケージ名との連結を防止）
+          if [ -s requirements.txt ] && [ "$(tail -c1 requirements.txt)" != "" ]; then
+            echo "" >> requirements.txt
+          fi
+
+          # 過去に追記したキープアライブ用コメント行を削除
+          sed -i '/^# Last keep-alive:/d' requirements.txt
+
+          # 現在の日時（UTC）を末尾にコメントとして新規追記（pipの解釈には一切影響しません）
+          echo "# Last keep-alive: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> requirements.txt
+
+      # 3. 差分をコミットしてmainブランチへプッシュ
+      - name: 変更をコミットしてプッシュ
+        run: |
+          # コミット作成者（Bot）の設定
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add requirements.txt
+
+          # 【重要バグ対策3】差分が存在する場合のみコミット＆プッシュを実行
+          if ! git diff --staged --quiet; then
+            # [skip ci] により、他の不要なワークフローの連鎖実行を抑止
+            git commit -m "chore: keep alive ping [skip ci]"
+            git push origin main
+          else
+            echo "変更差分がないためコミットをスキップしました"
+          fi
