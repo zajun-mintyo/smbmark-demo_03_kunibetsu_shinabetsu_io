@@ -16,22 +16,45 @@ st.set_page_config(
 UNIT_LABEL = "金額（億円）"
 UNIT_DIVISOR = 100_000
 
-EXPORT_COLOR = "#2563EB"   # 輸出：ブルー
-IMPORT_COLOR = "#F59E0B"   # 輸入：アンバー
-SURPLUS_COLOR = "#16A34A"  # 黒字：グリーン
-DEFICIT_COLOR = "#DC2626"  # 赤字：レッド
-NET_LINE_COLOR = "#0F172A" # 収支差額ライン：ネイビー
-GRID_COLOR = "#E5E7EB"
-TEXT_MUTED = "#6B7280"
+# --- ダークテーマ基本パレット ---
+BG_MAIN = "#0B0E14"        # ページ背景（ほぼ黒に近いネイビー）
+BG_CARD = "#161B22"        # カード・サイドバー背景
+BG_CARD_HOVER = "#1C222B"  # カードのホバー背景
+BORDER_COLOR = "#242B36"   # カード・区切り線
+TEXT_PRIMARY = "#E6E9EF"   # 主要テキスト（白に近いグレー）
+TEXT_MUTED = "#8B93A1"     # 補助テキスト
 
-CHART_FONT = dict(family="Helvetica, Arial, sans-serif", color="#1F2937")
+ACCENT = "#22E6A0"         # アクセントのミントグリーン
+ACCENT_HOVER = "#17C989"   # ホバー時の濃いグリーン
+ACCENT_SOFT = "rgba(34,230,160,0.12)"  # 淡いグリーン背景
+
+EXPORT_COLOR = "#60A5FA"   # 輸出：ブルー（ダーク背景用に明るめ）
+IMPORT_COLOR = "#FBBF24"   # 輸入：アンバー
+SURPLUS_COLOR = ACCENT     # 黒字：グリーン
+DEFICIT_COLOR = "#F87171"  # 赤字：レッド
+NET_LINE_COLOR = TEXT_PRIMARY  # 収支差額ライン：明るいグレー
+GRID_COLOR = BORDER_COLOR
+CHIP_BG = "#0F131A"
+
+CHART_FONT = dict(family="Helvetica, Arial, sans-serif", color=TEXT_PRIMARY)
 
 # ----------------- グローバルCSS -----------------
 st.markdown(f"""
 <style>
+    /* ページ全体・サイドバーの背景をダークトーンに */
+    .stApp {{
+        background-color: {BG_MAIN};
+    }}
+    [data-testid="stSidebar"] {{
+        background-color: {BG_CARD};
+        border-right: 1px solid {BORDER_COLOR};
+    }}
     .block-container {{
         padding-top: 1.5rem;
         padding-bottom: 3rem;
+    }}
+    h1, h2, h3, h4, h5, p, span, label {{
+        color: {TEXT_PRIMARY};
     }}
     h1, h2, h3 {{
         font-weight: 700;
@@ -39,12 +62,16 @@ st.markdown(f"""
     }}
     /* KPIカード */
     .kpi-card {{
-        background: #FFFFFF;
-        border: 1px solid {GRID_COLOR};
-        border-radius: 12px;
+        background: {BG_CARD};
+        border: 1px solid {BORDER_COLOR};
+        border-radius: 14px;
         padding: 18px 20px;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
         height: 100%;
+        transition: border-color 0.15s ease, background-color 0.15s ease;
+    }}
+    .kpi-card:hover {{
+        background: {BG_CARD_HOVER};
+        border-color: {ACCENT};
     }}
     .kpi-label {{
         font-size: 0.80rem;
@@ -53,9 +80,9 @@ st.markdown(f"""
         margin-bottom: 6px;
     }}
     .kpi-value {{
-        font-size: 1.6rem;
+        font-size: 1.7rem;
         font-weight: 700;
-        color: #111827;
+        color: {TEXT_PRIMARY};
         line-height: 1.2;
     }}
     .kpi-sub {{
@@ -65,19 +92,19 @@ st.markdown(f"""
     }}
     .badge-surplus {{
         display: inline-block;
-        background: rgba(22,163,74,0.12);
+        background: {ACCENT_SOFT};
         color: {SURPLUS_COLOR};
         font-weight: 700;
-        padding: 2px 10px;
+        padding: 3px 12px;
         border-radius: 999px;
         font-size: 0.9rem;
     }}
     .badge-deficit {{
         display: inline-block;
-        background: rgba(220,38,38,0.12);
+        background: rgba(248,113,113,0.14);
         color: {DEFICIT_COLOR};
         font-weight: 700;
-        padding: 2px 10px;
+        padding: 3px 12px;
         border-radius: 999px;
         font-size: 0.9rem;
     }}
@@ -92,8 +119,8 @@ st.markdown(f"""
         bottom: 25px;
         right: 30px;
         z-index: 9999;
-        background-color: {EXPORT_COLOR};
-        color: white !important;
+        background-color: {ACCENT};
+        color: {BG_MAIN} !important;
         border: none;
         border-radius: 50%;
         width: 46px;
@@ -101,7 +128,7 @@ st.markdown(f"""
         font-size: 20px;
         font-weight: bold;
         cursor: pointer;
-        box-shadow: 0 4px 10px rgba(15,23,42,0.25);
+        box-shadow: 0 4px 14px rgba(34,230,160,0.35);
         transition: all 0.2s ease;
         display: flex;
         align-items: center;
@@ -109,7 +136,7 @@ st.markdown(f"""
         text-decoration: none !important;
     }}
     .scroll-top-btn:hover {{
-        background-color: #1D4ED8;
+        background-color: {ACCENT_HOVER};
         transform: translateY(-3px);
     }}
     #top-anchor {{ position: absolute; top: 0; left: 0; }}
@@ -117,7 +144,8 @@ st.markdown(f"""
     /* タブ：セグメントコントロール風に強調 */
     .stTabs [data-baseweb="tab-list"] {{
         gap: 4px;
-        background-color: {GRID_COLOR};
+        background-color: {BG_CARD};
+        border: 1px solid {BORDER_COLOR};
         padding: 6px;
         border-radius: 12px;
         margin-bottom: 4px;
@@ -133,14 +161,17 @@ st.markdown(f"""
         border: none;
         transition: all 0.15s ease;
     }}
+    .stTabs [data-baseweb="tab"] p {{
+        color: inherit;
+    }}
     .stTabs [data-baseweb="tab"]:hover {{
-        color: #111827;
-        background-color: rgba(255,255,255,0.6);
+        color: {TEXT_PRIMARY};
+        background-color: {BG_CARD_HOVER};
     }}
     .stTabs [aria-selected="true"] {{
-        background-color: #FFFFFF !important;
-        color: {EXPORT_COLOR} !important;
-        box-shadow: 0 1px 4px rgba(15,23,42,0.10);
+        background-color: {ACCENT_SOFT} !important;
+        color: {ACCENT} !important;
+        box-shadow: inset 0 0 0 1px rgba(34,230,160,0.35);
     }}
     .stTabs [data-baseweb="tab-highlight"] {{
         background-color: transparent;
@@ -160,9 +191,9 @@ st.markdown(f"""
         padding: 2px 8px;
         border-radius: 999px;
     }}
-    .delta-up {{ color: {SURPLUS_COLOR}; background: rgba(22,163,74,0.10); }}
-    .delta-down {{ color: {DEFICIT_COLOR}; background: rgba(220,38,38,0.10); }}
-    .delta-flat {{ color: {TEXT_MUTED}; background: rgba(107,114,128,0.10); }}
+    .delta-up {{ color: {SURPLUS_COLOR}; background: {ACCENT_SOFT}; }}
+    .delta-down {{ color: {DEFICIT_COLOR}; background: rgba(248,113,113,0.12); }}
+    .delta-flat {{ color: {TEXT_MUTED}; background: rgba(139,147,161,0.12); }}
 
     /* フィルターチップ */
     .filter-chip-label {{
@@ -175,17 +206,38 @@ st.markdown(f"""
     }}
     .stButton > button {{
         border-radius: 999px;
-        border: 1px solid {GRID_COLOR};
-        background-color: #FFFFFF;
-        color: #374151;
+        border: 1px solid {BORDER_COLOR};
+        background-color: {CHIP_BG};
+        color: {TEXT_PRIMARY};
         font-size: 0.82rem;
         font-weight: 600;
         padding: 2px 6px;
         transition: all 0.15s ease;
     }}
     .stButton > button:hover {{
-        border-color: {EXPORT_COLOR};
-        color: {EXPORT_COLOR};
+        border-color: {ACCENT};
+        color: {ACCENT};
+        background-color: {ACCENT_SOFT};
+    }}
+    .stButton > button p {{
+        color: inherit;
+    }}
+
+    /* サイドバーのセレクト・マルチセレクト・ラジオ類 */
+    [data-testid="stSidebar"] [data-baseweb="select"] > div {{
+        background-color: {CHIP_BG};
+        border-color: {BORDER_COLOR};
+    }}
+    span[data-baseweb="tag"] {{
+        background-color: {ACCENT_SOFT} !important;
+        color: {ACCENT} !important;
+    }}
+
+    /* データフレーム */
+    [data-testid="stDataFrame"] {{
+        border: 1px solid {BORDER_COLOR};
+        border-radius: 10px;
+        overflow: hidden;
     }}
 </style>
 <div id="top-anchor"></div>
@@ -418,8 +470,8 @@ with tab_trend:
         fig_trend.update_layout(
             barmode='group',
             font=CHART_FONT,
-            plot_bgcolor='white',
-            paper_bgcolor='white',
+            plot_bgcolor=BG_CARD,
+            paper_bgcolor=BG_CARD,
             xaxis=dict(title='年', tickmode='linear', gridcolor=GRID_COLOR, showline=True, linecolor=GRID_COLOR),
             yaxis=dict(title=UNIT_LABEL, tickformat=',.0f', ticksuffix=' 億円', gridcolor=GRID_COLOR),
             hovermode='x unified',
@@ -468,8 +520,8 @@ with tab_trend:
         ))
         fig_m.update_layout(
             font=CHART_FONT,
-            plot_bgcolor='white',
-            paper_bgcolor='white',
+            plot_bgcolor=BG_CARD,
+            paper_bgcolor=BG_CARD,
             xaxis=dict(title='年月', tickangle=-45, gridcolor=GRID_COLOR),
             yaxis=dict(title=UNIT_LABEL, tickformat=',.0f', ticksuffix=' 億円', gridcolor=GRID_COLOR),
             hovermode='x unified',
@@ -527,8 +579,8 @@ with tab_hs:
         fig_bf.update_layout(
             barmode='relative',
             font=CHART_FONT,
-            plot_bgcolor='white',
-            paper_bgcolor='white',
+            plot_bgcolor=BG_CARD,
+            paper_bgcolor=BG_CARD,
             yaxis=dict(autorange='reversed', title=''),
             xaxis=dict(title='← 輸入超過 ｜ 輸出超過 →', tickformat=',.0f', ticksuffix=' 億円', gridcolor=GRID_COLOR),
             height=560,
@@ -551,8 +603,8 @@ with tab_hs:
         ))
         fig_net.update_layout(
             font=CHART_FONT,
-            plot_bgcolor='white',
-            paper_bgcolor='white',
+            plot_bgcolor=BG_CARD,
+            paper_bgcolor=BG_CARD,
             yaxis=dict(title=''),
             xaxis=dict(title='緑=黒字 ／ 赤=赤字', tickformat=',.0f', ticksuffix=' 億円', gridcolor=GRID_COLOR),
             height=560,
