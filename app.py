@@ -17,16 +17,16 @@ UNIT_LABEL = "金額（億円）"
 UNIT_DIVISOR = 100_000
 
 # --- ダークテーマ基本パレット ---
-BG_MAIN = "#0B0E14"        # ページ背景（ほぼ黒に近いネイビー）
-BG_CARD = "#161B22"        # カード・サイドバー背景
-BG_CARD_HOVER = "#1C222B"  # カードのホバー背景
-BORDER_COLOR = "#242B36"   # カード・区切り線
-TEXT_PRIMARY = "#E6E9EF"   # 主要テキスト（白に近いグレー）
+BG_MAIN = "#05070B"        # ページ背景（漆黒に近いネイビー）
+BG_CARD = "#1B2029"        # カード・サイドバー背景
+BG_CARD_HOVER = "#232A35"  # カードのホバー背景
+BORDER_COLOR = "#2E3746"   # カード・区切り線
+TEXT_PRIMARY = "#F2F4F8"   # 主要テキスト（白に近いグレー）
 TEXT_MUTED = "#8B93A1"     # 補助テキスト
 
 ACCENT = "#22E6A0"         # アクセントのミントグリーン
 ACCENT_HOVER = "#17C989"   # ホバー時の濃いグリーン
-ACCENT_SOFT = "rgba(34,230,160,0.12)"  # 淡いグリーン背景
+ACCENT_SOFT = "rgba(34,230,160,0.16)"  # 淡いグリーン背景
 
 EXPORT_COLOR = "#60A5FA"   # 輸出：ブルー（ダーク背景用に明るめ）
 IMPORT_COLOR = "#FBBF24"   # 輸入：アンバー
@@ -34,34 +34,39 @@ SURPLUS_COLOR = ACCENT     # 黒字：グリーン
 DEFICIT_COLOR = "#F87171"  # 赤字：レッド
 NET_LINE_COLOR = TEXT_PRIMARY  # 収支差額ライン：明るいグレー
 GRID_COLOR = BORDER_COLOR
-CHIP_BG = "#0F131A"
+CHIP_BG = "#12161E"
 
-# --- 立体感・光沢演出用 ---
-CARD_GRAD = "linear-gradient(155deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 40%), linear-gradient(155deg, #1B212C 0%, #10141B 100%)"
-CARD_GRAD_HOVER = "linear-gradient(155deg, rgba(34,230,160,0.10) 0%, rgba(255,255,255,0) 45%), linear-gradient(155deg, #1E2530 0%, #12161D 100%)"
-CHIP_GRAD = "linear-gradient(180deg, #171D26 0%, #0D1017 100%)"
-GLASS_BORDER = "rgba(255,255,255,0.07)"
-SHADOW_CARD = "0 10px 28px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05)"
-SHADOW_CARD_HOVER = "0 16px 36px rgba(0,0,0,0.55), 0 0 0 1px rgba(34,230,160,0.30), inset 0 1px 0 rgba(255,255,255,0.06)"
-GLOW_ACCENT = "0 4px 18px rgba(34,230,160,0.45), 0 0 0 1px rgba(34,230,160,0.25) inset"
+# --- 立体感・光沢演出用（はっきり視認できる濃さに設定） ---
+CARD_GRAD = "linear-gradient(155deg, #2A3242 0%, #1B2029 45%, #10141B 100%)"
+CARD_GRAD_HOVER = "linear-gradient(155deg, #333D50 0%, #212836 45%, #12161D 100%)"
+CHIP_GRAD = "linear-gradient(180deg, #232B38 0%, #0C0F15 100%)"
+GLASS_BORDER = "rgba(255,255,255,0.16)"
+SHADOW_CARD = "0 20px 44px -14px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.06) inset, 0 0 28px rgba(34,230,160,0.10)"
+SHADOW_CARD_HOVER = "0 26px 54px -14px rgba(0,0,0,0.9), 0 0 0 1px rgba(34,230,160,0.45), 0 0 42px rgba(34,230,160,0.28)"
+GLOW_ACCENT = "0 6px 24px rgba(34,230,160,0.55), 0 0 0 1px rgba(255,255,255,0.25) inset"
+TOP_STRIPE = "linear-gradient(90deg, {0} 0%, rgba(255,255,255,0.35) 55%, transparent 100%)".format(ACCENT)
 
 CHART_FONT = dict(family="Helvetica, Arial, sans-serif", color=TEXT_PRIMARY)
+
+
 
 # ----------------- グローバルCSS -----------------
 st.markdown(f"""
 <style>
-    /* ページ全体：微光のにじむグラデーション背景 */
+    /* ページ全体：はっきり見える光暈グラデーション背景 */
     .stApp {{
         background:
-            radial-gradient(1100px 520px at 8% -8%, rgba(34,230,160,0.08), transparent 60%),
-            radial-gradient(900px 480px at 96% 8%, rgba(96,165,250,0.06), transparent 55%),
-            radial-gradient(1200px 800px at 50% 110%, rgba(34,230,160,0.04), transparent 60%),
+            radial-gradient(1100px 520px at 8% -8%, rgba(34,230,160,0.20), transparent 60%),
+            radial-gradient(900px 480px at 96% 4%, rgba(96,165,250,0.16), transparent 55%),
+            radial-gradient(1300px 900px at 50% 115%, rgba(34,230,160,0.10), transparent 60%),
             {BG_MAIN};
     }}
     [data-testid="stSidebar"] {{
-        background: linear-gradient(180deg, #141922 0%, #0E1218 100%);
+        background:
+            radial-gradient(500px 260px at 10% 0%, rgba(34,230,160,0.14), transparent 55%),
+            linear-gradient(180deg, #1A2029 0%, #0A0D12 100%);
         border-right: 1px solid {GLASS_BORDER};
-        box-shadow: 6px 0 24px rgba(0,0,0,0.35);
+        box-shadow: 10px 0 32px rgba(0,0,0,0.55);
     }}
     [data-testid="stSidebar"] > div:first-child {{
         background: transparent;
@@ -78,27 +83,44 @@ st.markdown(f"""
         letter-spacing: -0.01em;
     }}
     h1 {{
-        background: linear-gradient(90deg, {TEXT_PRIMARY} 0%, #C7D6E8 100%);
+        background: linear-gradient(90deg, #FFFFFF 0%, {ACCENT} 120%);
         -webkit-background-clip: text;
         background-clip: text;
         -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 40px rgba(34,230,160,0.25);
     }}
-    /* KPIカード：グラデーション＋二重シャドウでガラス質感 */
+    /* KPIカード：はっきりした斜めグラデーション＋二重シャドウ＋上端アクセントライン */
     .kpi-card {{
+        position: relative;
+        overflow: hidden;
         background: {CARD_GRAD};
         border: 1px solid {GLASS_BORDER};
         border-radius: 16px;
-        padding: 20px 22px;
+        padding: 22px 22px 20px 22px;
         height: 100%;
         box-shadow: {SHADOW_CARD};
-        backdrop-filter: blur(14px);
-        -webkit-backdrop-filter: blur(14px);
         transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }}
+    .kpi-card::before {{
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: {TOP_STRIPE};
+        opacity: 0.9;
+    }}
+    .kpi-card::after {{
+        content: "";
+        position: absolute;
+        top: -40%; left: -10%;
+        width: 70%; height: 90%;
+        background: radial-gradient(circle, rgba(255,255,255,0.08), transparent 70%);
+        pointer-events: none;
     }}
     .kpi-card:hover {{
         background: {CARD_GRAD_HOVER};
         box-shadow: {SHADOW_CARD_HOVER};
-        transform: translateY(-3px);
+        transform: translateY(-4px);
     }}
     .kpi-label {{
         font-size: 0.80rem;
@@ -122,23 +144,23 @@ st.markdown(f"""
     }}
     .badge-surplus {{
         display: inline-block;
-        background: linear-gradient(135deg, rgba(34,230,160,0.28), rgba(34,230,160,0.06));
-        color: {SURPLUS_COLOR};
+        background: linear-gradient(135deg, rgba(34,230,160,0.40), rgba(34,230,160,0.10));
+        color: #B8FFE4;
         font-weight: 700;
         padding: 4px 14px;
         border-radius: 999px;
         font-size: 0.9rem;
-        box-shadow: 0 0 0 1px rgba(34,230,160,0.30), 0 4px 14px rgba(34,230,160,0.18);
+        box-shadow: 0 0 0 1px rgba(34,230,160,0.55), 0 4px 18px rgba(34,230,160,0.35);
     }}
     .badge-deficit {{
         display: inline-block;
-        background: linear-gradient(135deg, rgba(248,113,113,0.28), rgba(248,113,113,0.06));
-        color: {DEFICIT_COLOR};
+        background: linear-gradient(135deg, rgba(248,113,113,0.40), rgba(248,113,113,0.10));
+        color: #FFD7D7;
         font-weight: 700;
         padding: 4px 14px;
         border-radius: 999px;
         font-size: 0.9rem;
-        box-shadow: 0 0 0 1px rgba(248,113,113,0.30), 0 4px 14px rgba(248,113,113,0.16);
+        box-shadow: 0 0 0 1px rgba(248,113,113,0.55), 0 4px 18px rgba(248,113,113,0.30);
     }}
     .section-caption {{
         color: {TEXT_MUTED};
@@ -202,9 +224,9 @@ st.markdown(f"""
         background-color: rgba(255,255,255,0.04);
     }}
     .stTabs [aria-selected="true"] {{
-        background: linear-gradient(155deg, rgba(34,230,160,0.22), rgba(34,230,160,0.06)) !important;
-        color: {ACCENT} !important;
-        box-shadow: inset 0 0 0 1px rgba(34,230,160,0.40), 0 4px 14px rgba(34,230,160,0.20);
+        background: linear-gradient(155deg, rgba(34,230,160,0.35), rgba(34,230,160,0.10)) !important;
+        color: #B8FFE4 !important;
+        box-shadow: inset 0 0 0 1px rgba(34,230,160,0.60), 0 6px 20px rgba(34,230,160,0.35);
     }}
     .stTabs [data-baseweb="tab-highlight"] {{
         background-color: transparent;
@@ -224,9 +246,9 @@ st.markdown(f"""
         padding: 3px 10px;
         border-radius: 999px;
     }}
-    .delta-up {{ color: {SURPLUS_COLOR}; background: linear-gradient(135deg, rgba(34,230,160,0.22), rgba(34,230,160,0.04)); box-shadow: 0 0 0 1px rgba(34,230,160,0.22); }}
-    .delta-down {{ color: {DEFICIT_COLOR}; background: linear-gradient(135deg, rgba(248,113,113,0.22), rgba(248,113,113,0.04)); box-shadow: 0 0 0 1px rgba(248,113,113,0.22); }}
-    .delta-flat {{ color: {TEXT_MUTED}; background: rgba(139,147,161,0.12); box-shadow: 0 0 0 1px rgba(139,147,161,0.18); }}
+    .delta-up {{ color: #B8FFE4; background: linear-gradient(135deg, rgba(34,230,160,0.35), rgba(34,230,160,0.08)); box-shadow: 0 0 0 1px rgba(34,230,160,0.40); }}
+    .delta-down {{ color: #FFD7D7; background: linear-gradient(135deg, rgba(248,113,113,0.35), rgba(248,113,113,0.08)); box-shadow: 0 0 0 1px rgba(248,113,113,0.40); }}
+    .delta-flat {{ color: {TEXT_MUTED}; background: rgba(139,147,161,0.16); box-shadow: 0 0 0 1px rgba(139,147,161,0.25); }}
 
     /* フィルターチップ */
     .filter-chip-label {{
@@ -244,15 +266,15 @@ st.markdown(f"""
         color: {TEXT_PRIMARY};
         font-size: 0.82rem;
         font-weight: 600;
-        padding: 3px 8px;
-        box-shadow: 0 3px 10px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04);
+        padding: 4px 10px;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.08);
         transition: all 0.15s ease;
     }}
     .stButton > button:hover {{
-        border-color: rgba(34,230,160,0.55);
-        color: {ACCENT};
-        background: linear-gradient(180deg, rgba(34,230,160,0.16) 0%, #0D1017 100%);
-        box-shadow: 0 4px 16px rgba(34,230,160,0.22), inset 0 1px 0 rgba(255,255,255,0.05);
+        border-color: rgba(34,230,160,0.65);
+        color: #B8FFE4;
+        background: linear-gradient(180deg, rgba(34,230,160,0.24) 0%, #0D1017 100%);
+        box-shadow: 0 6px 20px rgba(34,230,160,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
         transform: translateY(-1px);
     }}
     .stButton > button p {{
@@ -263,12 +285,13 @@ st.markdown(f"""
     [data-testid="stSidebar"] [data-baseweb="select"] > div {{
         background: {CHIP_GRAD};
         border-color: {GLASS_BORDER};
-        box-shadow: inset 0 1px 3px rgba(0,0,0,0.35);
+        box-shadow: inset 0 1px 4px rgba(0,0,0,0.5);
     }}
     span[data-baseweb="tag"] {{
-        background: linear-gradient(135deg, rgba(34,230,160,0.30), rgba(34,230,160,0.10)) !important;
-        color: {ACCENT} !important;
-        box-shadow: 0 0 0 1px rgba(34,230,160,0.30), 0 2px 8px rgba(34,230,160,0.15);
+        background: linear-gradient(135deg, rgba(34,230,160,0.45), rgba(34,230,160,0.15)) !important;
+        color: #063324 !important;
+        font-weight: 700 !important;
+        box-shadow: 0 0 0 1px rgba(34,230,160,0.55), 0 3px 12px rgba(34,230,160,0.30);
     }}
 
     /* データフレーム */
