@@ -1,4 +1,3 @@
-```python
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -347,6 +346,11 @@ if selected_countries:
 if selected_hs:
     df_filtered = df_filtered[df_filtered['HS品目大分類'].isin(selected_hs)]
 
+# 0件時の安全ガード
+if df_filtered.empty:
+    st.warning("⚠️ 選択された条件に合致するデータがありません。条件を変更してください。")
+    st.stop()
+
 # ----------------- ヘッダー -----------------
 st.title("📦 日本の貿易統計ダッシュボード")
 target_country_text = "、".join(selected_countries) if selected_countries else "全世界（全カ国・地域）"
@@ -484,8 +488,8 @@ with tab_trend:
                 if y == 2026 and m > 7:
                     continue
                 col_name = f'{m}月_金額_千円'
-                exp_val = df_filtered[(df_filtered['年'] == y) & (df_filtered['輸出入区分'] == '輸出')][col_name].sum() / UNIT_DIVISOR
-                imp_val = df_filtered[(df_filtered['年'] == y) & (df_filtered['輸出入区分'] == '輸入')][col_name].sum() / UNIT_DIVISOR
+                exp_val = df_filtered[(df_filtered['年'] == y) & (df_filtered['輸出入区分'] == '輸出')][col_name].sum() / UNIT_DIVISOR if col_name in df_filtered.columns else 0
+                imp_val = df_filtered[(df_filtered['年'] == y) & (df_filtered['輸出入区分'] == '輸入')][col_name].sum() / UNIT_DIVISOR if col_name in df_filtered.columns else 0
                 monthly_records.append({
                     '年月': f"{y}-{m:02d}",
                     '輸出額': exp_val,
@@ -654,17 +658,21 @@ with tab_country:
 
     df_c_summary = df_c_summary.sort_values(by='取引規模合計', ascending=False).drop(columns=['取引規模合計']).reset_index(drop=True)
 
-    # ダークテーマ対応のテーブルスタイリング
+    # Pandas バージョン互換性対応（map / applymap の自動フォールバック）
+    styler = df_c_summary.style.format({
+        '輸出額（億円）': '{:,.1f}',
+        '輸入額（億円）': '{:,.1f}',
+        '収支差額（億円）': '{:+,.1f}'
+    })
+
+    style_func = lambda v: f'color: {SURPLUS_COLOR}; font-weight:700' if v == '黒字' else f'color: {DEFICIT_COLOR}; font-weight:700'
+    if hasattr(styler, "map"):
+        styler = styler.map(style_func, subset=['判定'])
+    else:
+        styler = styler.applymap(style_func, subset=['判定'])
+
     st.dataframe(
-        df_c_summary.style.format({
-            '輸出額（億円）': '{:,.1f}',
-            '輸入額（億円）': '{:,.1f}',
-            '収支差額（億円）': '{:+,.1f}'
-        }).map(
-            lambda v: f'color: {SURPLUS_COLOR}; font-weight:700' if v == '黒字'
-            else f'color: {DEFICIT_COLOR}; font-weight:700',
-            subset=['判定']
-        ),
+        styler,
         use_container_width=True,
         height=420
     )
@@ -676,4 +684,3 @@ with tab_country:
         file_name=f"trade_summary_by_country_{selected_table_period}.csv",
         mime="text/csv"
     )
-```
