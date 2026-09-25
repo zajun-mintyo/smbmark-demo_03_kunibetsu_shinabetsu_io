@@ -1,3 +1,4 @@
+```python
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -5,6 +6,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import os
 
+# ----------------- ページ基本設定 -----------------
 st.set_page_config(
     page_title="貿易統計ダッシュボード｜国別・品目別推移",
     page_icon="📦",
@@ -12,96 +14,140 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ----------------- 定数 -----------------
+# ----------------- 定数・カラーパレット（ダークテーマ） -----------------
 UNIT_LABEL = "金額（億円）"
 UNIT_DIVISOR = 100_000
 
-EXPORT_COLOR = "#2563EB"   # 輸出：ブルー
-IMPORT_COLOR = "#F59E0B"   # 輸入：アンバー
-SURPLUS_COLOR = "#16A34A"  # 黒字：グリーン
-DEFICIT_COLOR = "#DC2626"  # 赤字：レッド
-NET_LINE_COLOR = "#0F172A" # 収支差額ライン：ネイビー
-GRID_COLOR = "#E5E7EB"
-TEXT_MUTED = "#6B7280"
+# リファレンス画像準拠のダークモード配色
+COLOR_BG_BASE = "#0B0E11"        # メイン背景（漆黒）
+COLOR_BG_SURFACE = "#171E24"     # カード・サーフェス背景（ダークチャコール）
+COLOR_BG_SIDEBAR = "#11161B"     # サイドバー背景（ディープブラック）
+COLOR_BORDER = "rgba(255, 255, 255, 0.08)"  # 微細ボーダー
 
-CHART_FONT = dict(family="Helvetica, Arial, sans-serif", color="#1F2937")
+EXPORT_COLOR = "#00D084"          # 輸出：ネオングリーン（リファレンスの主役色）
+IMPORT_COLOR = "#00C2FF"          # 輸入：サイバーシアン（対比色）
+SURPLUS_COLOR = "#00D084"         # 黒字：ネオングリーン
+DEFICIT_COLOR = "#FF4D4F"         # 赤字：クリムゾンレッド
+NET_LINE_COLOR = "#F8FAFC"        # 収支差額ライン：クリアホワイト
+GRID_COLOR = "rgba(255, 255, 255, 0.08)"
+TEXT_PRIMARY = "#F8FAFC"
+TEXT_MUTED = "#8696A0"
 
-# ----------------- グローバルCSS -----------------
+CHART_FONT = dict(family="Helvetica, Arial, sans-serif", color=TEXT_PRIMARY, size=12)
+
+# ----------------- グローバルCSS（完全ダークトーン化） -----------------
 st.markdown(f"""
 <style>
+    /* 全体背景 & 基本文字色 */
+    [data-testid="stAppViewContainer"] {{
+        background-color: {COLOR_BG_BASE};
+        color: {TEXT_PRIMARY};
+    }}
+    [data-testid="stHeader"] {{
+        background-color: rgba(11, 14, 17, 0.85);
+        backdrop-filter: blur(8px);
+    }}
+    [data-testid="stSidebar"] {{
+        background-color: {COLOR_BG_SIDEBAR};
+        border-right: 1px solid {COLOR_BORDER};
+    }}
+    [data-testid="stSidebar"] * {{
+        color: {TEXT_PRIMARY};
+    }}
+
     .block-container {{
-        padding-top: 1.5rem;
+        padding-top: 2rem;
         padding-bottom: 3rem;
     }}
-    h1, h2, h3 {{
+
+    h1, h2, h3, h4, h5, h6 {{
+        color: {TEXT_PRIMARY} !important;
         font-weight: 700;
-        letter-spacing: -0.01em;
+        letter-spacing: -0.02em;
     }}
-    /* KPIカード */
+
+    /* ネオン発光風 KPIカード */
     .kpi-card {{
-        background: #FFFFFF;
-        border: 1px solid {GRID_COLOR};
-        border-radius: 12px;
-        padding: 18px 20px;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+        background: {COLOR_BG_SURFACE};
+        border: 1px solid {COLOR_BORDER};
+        border-radius: 14px;
+        padding: 20px 22px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
         height: 100%;
+        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }}
+    .kpi-card:hover {{
+        border-color: rgba(0, 208, 132, 0.4);
+        box-shadow: 0 6px 24px rgba(0, 208, 132, 0.12);
+        transform: translateY(-2px);
     }}
     .kpi-label {{
         font-size: 0.80rem;
         color: {TEXT_MUTED};
         font-weight: 600;
+        letter-spacing: 0.02em;
         margin-bottom: 6px;
     }}
     .kpi-value {{
-        font-size: 1.6rem;
-        font-weight: 700;
-        color: #111827;
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: {TEXT_PRIMARY};
         line-height: 1.2;
+        letter-spacing: -0.02em;
     }}
     .kpi-sub {{
         font-size: 0.78rem;
         color: {TEXT_MUTED};
-        margin-top: 4px;
+        margin-top: 6px;
     }}
+
+    /* 収支ステータスバッジ */
     .badge-surplus {{
         display: inline-block;
-        background: rgba(22,163,74,0.12);
+        background: rgba(0, 208, 132, 0.15);
         color: {SURPLUS_COLOR};
+        border: 1px solid rgba(0, 208, 132, 0.3);
         font-weight: 700;
-        padding: 2px 10px;
+        padding: 4px 14px;
         border-radius: 999px;
-        font-size: 0.9rem;
+        font-size: 0.95rem;
+        box-shadow: 0 0 10px rgba(0, 208, 132, 0.2);
     }}
     .badge-deficit {{
         display: inline-block;
-        background: rgba(220,38,38,0.12);
+        background: rgba(255, 77, 79, 0.15);
         color: {DEFICIT_COLOR};
+        border: 1px solid rgba(255, 77, 79, 0.3);
         font-weight: 700;
-        padding: 2px 10px;
+        padding: 4px 14px;
         border-radius: 999px;
-        font-size: 0.9rem;
+        font-size: 0.95rem;
+        box-shadow: 0 0 10px rgba(255, 77, 79, 0.2);
     }}
+
     .section-caption {{
         color: {TEXT_MUTED};
         font-size: 0.85rem;
         margin-top: -6px;
-        margin-bottom: 10px;
+        margin-bottom: 14px;
     }}
+
+    /* 最上部へ戻るボタン */
     .scroll-top-btn {{
         position: fixed;
         bottom: 25px;
         right: 30px;
         z-index: 9999;
         background-color: {EXPORT_COLOR};
-        color: white !important;
+        color: #0B0E11 !important;
         border: none;
         border-radius: 50%;
-        width: 46px;
-        height: 46px;
+        width: 48px;
+        height: 48px;
         font-size: 20px;
-        font-weight: bold;
+        font-weight: 800;
         cursor: pointer;
-        box-shadow: 0 4px 10px rgba(15,23,42,0.25);
+        box-shadow: 0 4px 20px rgba(0, 208, 132, 0.4);
         transition: all 0.2s ease;
         display: flex;
         align-items: center;
@@ -109,38 +155,41 @@ st.markdown(f"""
         text-decoration: none !important;
     }}
     .scroll-top-btn:hover {{
-        background-color: #1D4ED8;
-        transform: translateY(-3px);
+        background-color: #20E398;
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 6px 25px rgba(0, 208, 132, 0.6);
     }}
     #top-anchor {{ position: absolute; top: 0; left: 0; }}
 
-    /* タブ：セグメントコントロール風に強調 */
+    /* タブデザイン（ダークセグメントピル風） */
     .stTabs [data-baseweb="tab-list"] {{
-        gap: 4px;
-        background-color: {GRID_COLOR};
+        gap: 8px;
+        background-color: {COLOR_BG_SIDEBAR};
         padding: 6px;
         border-radius: 12px;
-        margin-bottom: 4px;
+        border: 1px solid {COLOR_BORDER};
+        margin-bottom: 12px;
     }}
     .stTabs [data-baseweb="tab"] {{
-        height: 46px;
+        height: 44px;
         border-radius: 8px;
-        padding: 0 22px;
+        padding: 0 24px;
         background-color: transparent;
         font-weight: 600;
         font-size: 0.95rem;
         color: {TEXT_MUTED};
         border: none;
-        transition: all 0.15s ease;
+        transition: all 0.2s ease;
     }}
     .stTabs [data-baseweb="tab"]:hover {{
-        color: #111827;
-        background-color: rgba(255,255,255,0.6);
+        color: {TEXT_PRIMARY};
+        background-color: rgba(255, 255, 255, 0.05);
     }}
     .stTabs [aria-selected="true"] {{
-        background-color: #FFFFFF !important;
+        background-color: {COLOR_BG_SURFACE} !important;
         color: {EXPORT_COLOR} !important;
-        box-shadow: 0 1px 4px rgba(15,23,42,0.10);
+        border: 1px solid rgba(0, 208, 132, 0.3) !important;
+        box-shadow: 0 0 14px rgba(0, 208, 132, 0.18);
     }}
     .stTabs [data-baseweb="tab-highlight"] {{
         background-color: transparent;
@@ -149,7 +198,7 @@ st.markdown(f"""
         display: none;
     }}
 
-    /* KPIの前年比デルタ */
+    /* KPIの前年比デルタ表示 */
     .kpi-delta {{
         display: inline-flex;
         align-items: center;
@@ -157,35 +206,36 @@ st.markdown(f"""
         font-size: 0.80rem;
         font-weight: 700;
         margin-top: 8px;
-        padding: 2px 8px;
+        padding: 2px 10px;
         border-radius: 999px;
     }}
-    .delta-up {{ color: {SURPLUS_COLOR}; background: rgba(22,163,74,0.10); }}
-    .delta-down {{ color: {DEFICIT_COLOR}; background: rgba(220,38,38,0.10); }}
-    .delta-flat {{ color: {TEXT_MUTED}; background: rgba(107,114,128,0.10); }}
+    .delta-up {{ color: {SURPLUS_COLOR}; background: rgba(0, 208, 132, 0.12); border: 1px solid rgba(0,208,132,0.25); }}
+    .delta-down {{ color: {DEFICIT_COLOR}; background: rgba(255, 77, 79, 0.12); border: 1px solid rgba(255,77,79,0.25); }}
+    .delta-flat {{ color: {TEXT_MUTED}; background: rgba(255, 255, 255, 0.08); }}
 
-    /* フィルターチップ */
+    /* フィルターチップボタン */
     .filter-chip-label {{
         font-size: 0.78rem;
         font-weight: 700;
         color: {TEXT_MUTED};
         text-transform: uppercase;
-        letter-spacing: 0.04em;
-        margin-bottom: 6px;
+        letter-spacing: 0.06em;
+        margin-bottom: 8px;
     }}
     .stButton > button {{
         border-radius: 999px;
-        border: 1px solid {GRID_COLOR};
-        background-color: #FFFFFF;
-        color: #374151;
+        border: 1px solid {COLOR_BORDER};
+        background-color: {COLOR_BG_SURFACE};
+        color: {TEXT_PRIMARY};
         font-size: 0.82rem;
         font-weight: 600;
-        padding: 2px 6px;
-        transition: all 0.15s ease;
+        padding: 4px 14px;
+        transition: all 0.2s ease;
     }}
     .stButton > button:hover {{
         border-color: {EXPORT_COLOR};
         color: {EXPORT_COLOR};
+        box-shadow: 0 0 10px rgba(0, 208, 132, 0.2);
     }}
 </style>
 <div id="top-anchor"></div>
@@ -198,7 +248,7 @@ DELTA_CLASS = {"up": "delta-up", "down": "delta-down", "flat": "delta-flat"}
 
 
 def calc_delta(curr, prev):
-    """前年比の方向とラベルを計算。比較対象がなければNoneを返す。"""
+    """前年比の方向とラベルを計算"""
     if prev is None or prev == 0:
         return None
     pct = (curr - prev) / abs(prev) * 100
@@ -240,7 +290,7 @@ except Exception as e:
     st.stop()
 
 # ----------------- サイドバー（検索・条件設定） -----------------
-st.sidebar.markdown("### 検索・絞り込み条件")
+st.sidebar.markdown("### 🔍 検索・絞り込み条件")
 
 if st.sidebar.button("条件をリセット", use_container_width=True):
     for key in ['selected_countries', 'selected_hs', 'time_granularity']:
@@ -261,7 +311,7 @@ top_countries_list = country_trade_totals.head(20).index.tolist()
 all_countries = sorted(df_raw['国名'].dropna().unique().tolist())
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("**国・地域の選択**")
+st.sidebar.markdown("**🌍 国・地域の選択**")
 
 col_btn1, col_btn2 = st.sidebar.columns(2)
 if col_btn1.button("TOP 10", use_container_width=True):
@@ -280,7 +330,7 @@ selected_countries = st.sidebar.multiselect(
 )
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("**品目の選択（HS品目大分類）**")
+st.sidebar.markdown("**📦 品目の選択（HS品目大分類）**")
 all_hs = sorted(df_raw['HS品目大分類'].dropna().unique().tolist())
 
 selected_hs = st.sidebar.multiselect(
@@ -298,7 +348,7 @@ if selected_hs:
     df_filtered = df_filtered[df_filtered['HS品目大分類'].isin(selected_hs)]
 
 # ----------------- ヘッダー -----------------
-st.title("日本の貿易統計ダッシュボード")
+st.title("📦 日本の貿易統計ダッシュボード")
 target_country_text = "、".join(selected_countries) if selected_countries else "全世界（全カ国・地域）"
 target_hs_text = f"{len(selected_hs)} 類を選択中" if selected_hs else "全品目（96類）"
 st.markdown(
@@ -308,14 +358,11 @@ st.markdown(
 
 # ----------------- アクティブフィルターチップ -----------------
 def _remove_filter_value(skey, val):
-    """on_clickコールバック内で実行 = ウィジェット再生成より前に安全にsession_stateを更新できる"""
     st.session_state[skey] = [v for v in st.session_state[skey] if v != val]
-
 
 def _clear_all_filters():
     st.session_state['selected_countries'] = []
     st.session_state['selected_hs'] = []
-
 
 chip_items = [("selected_countries", c) for c in selected_countries] + \
              [("selected_hs", h) for h in selected_hs]
@@ -338,20 +385,20 @@ if chip_items:
     st.button("すべて解除", key="clear_all_chips", on_click=_clear_all_filters)
     st.write("")
 
-# 年次データの集計（KPI・推移タブ共通）
+# 年次データの集計
 annual_exp = df_filtered[df_filtered['輸出入区分'] == '輸出'].groupby('年')['年間累計_金額_千円'].sum() / UNIT_DIVISOR
 annual_imp = df_filtered[df_filtered['輸出入区分'] == '輸入'].groupby('年')['年間累計_金額_千円'].sum() / UNIT_DIVISOR
 common_years = sorted(list(set(annual_exp.index).intersection(set(annual_imp.index))))
 valid_years = sorted([y for y in common_years if y <= 2025], reverse=True)
 latest_year = valid_years[0] if valid_years else None
 
-# ----------------- KPIサマリ（常時表示） -----------------
+# ----------------- KPIサマリ（4連発光タイル） -----------------
 if latest_year:
     latest_exp = annual_exp.get(latest_year, 0)
     latest_imp = annual_imp.get(latest_year, 0)
     latest_net = latest_exp - latest_imp
-    badge_html = (f'<span class="badge-surplus">黒字</span>' if latest_net >= 0
-                  else f'<span class="badge-deficit">赤字</span>')
+    badge_html = (f'<span class="badge-surplus">🟢 黒字</span>' if latest_net >= 0
+                  else f'<span class="badge-deficit">🔴 赤字</span>')
 
     prev_year = valid_years[1] if len(valid_years) > 1 else None
     prev_exp = annual_exp.get(prev_year, 0) if prev_year else None
@@ -363,13 +410,13 @@ if latest_year:
 
     k1, k2, k3, k4 = st.columns(4)
     with k1:
-        kpi_card("総輸出額", f"{latest_exp:,.0f} 億円", f"{latest_year}年",
+        kpi_card("総輸出額", f"{latest_exp:,.0f} 億円", f"{latest_year}年 実績",
                   delta=calc_delta(latest_exp, prev_exp))
     with k2:
-        kpi_card("総輸入額", f"{latest_imp:,.0f} 億円", f"{latest_year}年",
+        kpi_card("総輸入額", f"{latest_imp:,.0f} 億円", f"{latest_year}年 実績",
                   delta=calc_delta(latest_imp, prev_imp))
     with k3:
-        kpi_card("貿易収支（輸出－輸入）", f"{latest_net:+,.0f} 億円", f"{latest_year}年",
+        kpi_card("貿易収支（輸出－輸入）", f"{latest_net:+,.0f} 億円", f"{latest_year}年 実績",
                   delta=calc_delta(latest_net, prev_net))
     with k4:
         kpi_card("収支判定", badge_html, prev_status_text)
@@ -412,19 +459,19 @@ with tab_trend:
             name='収支差額（輸出－輸入）',
             mode='lines+markers',
             line=dict(color=NET_LINE_COLOR, width=2.5),
-            marker=dict(size=7),
+            marker=dict(size=7, color=NET_LINE_COLOR),
             hovertemplate='%{x}年 収支差額: %{y:+,.1f} 億円<extra></extra>'
         ))
         fig_trend.update_layout(
             barmode='group',
             font=CHART_FONT,
-            plot_bgcolor='white',
-            paper_bgcolor='white',
-            xaxis=dict(title='年', tickmode='linear', gridcolor=GRID_COLOR, showline=True, linecolor=GRID_COLOR),
+            plot_bgcolor=COLOR_BG_SURFACE,
+            paper_bgcolor=COLOR_BG_SURFACE,
+            xaxis=dict(title='年', tickmode='linear', gridcolor=GRID_COLOR, showline=True, linecolor=COLOR_BORDER),
             yaxis=dict(title=UNIT_LABEL, tickformat=',.0f', ticksuffix=' 億円', gridcolor=GRID_COLOR),
             hovermode='x unified',
-            height=380,
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            height=400,
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(color=TEXT_PRIMARY)),
             margin=dict(t=40, l=10, r=10, b=10)
         )
         st.plotly_chart(fig_trend, use_container_width=True)
@@ -451,12 +498,12 @@ with tab_trend:
         fig_m = go.Figure()
         fig_m.add_trace(go.Scatter(
             x=df_monthly['年月'], y=df_monthly['輸出額'],
-            name='輸出額', mode='lines', line=dict(color=EXPORT_COLOR, width=2),
+            name='輸出額', mode='lines', line=dict(color=EXPORT_COLOR, width=2.2),
             hovertemplate='%{x} 輸出額: %{y:,.1f} 億円<extra></extra>'
         ))
         fig_m.add_trace(go.Scatter(
             x=df_monthly['年月'], y=df_monthly['輸入額'],
-            name='輸入額', mode='lines', line=dict(color=IMPORT_COLOR, width=2),
+            name='輸入額', mode='lines', line=dict(color=IMPORT_COLOR, width=2.2),
             hovertemplate='%{x} 輸入額: %{y:,.1f} 億円<extra></extra>'
         ))
         fig_m.add_trace(go.Bar(
@@ -464,17 +511,17 @@ with tab_trend:
             name='収支差額',
             marker_color=np.where(df_monthly['収支差額'] >= 0, SURPLUS_COLOR, DEFICIT_COLOR),
             hovertemplate='%{x} 収支差額: %{y:+,.1f} 億円<extra></extra>',
-            opacity=0.55
+            opacity=0.65
         ))
         fig_m.update_layout(
             font=CHART_FONT,
-            plot_bgcolor='white',
-            paper_bgcolor='white',
+            plot_bgcolor=COLOR_BG_SURFACE,
+            paper_bgcolor=COLOR_BG_SURFACE,
             xaxis=dict(title='年月', tickangle=-45, gridcolor=GRID_COLOR),
             yaxis=dict(title=UNIT_LABEL, tickformat=',.0f', ticksuffix=' 億円', gridcolor=GRID_COLOR),
             hovermode='x unified',
-            height=380,
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            height=400,
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(color=TEXT_PRIMARY)),
             margin=dict(t=40, l=10, r=10, b=10)
         )
         st.plotly_chart(fig_m, use_container_width=True)
@@ -527,12 +574,12 @@ with tab_hs:
         fig_bf.update_layout(
             barmode='relative',
             font=CHART_FONT,
-            plot_bgcolor='white',
-            paper_bgcolor='white',
+            plot_bgcolor=COLOR_BG_SURFACE,
+            paper_bgcolor=COLOR_BG_SURFACE,
             yaxis=dict(autorange='reversed', title=''),
             xaxis=dict(title='← 輸入超過 ｜ 輸出超過 →', tickformat=',.0f', ticksuffix=' 億円', gridcolor=GRID_COLOR),
-            height=560,
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            height=580,
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(color=TEXT_PRIMARY)),
             margin=dict(t=40, l=10, r=10, b=10)
         )
         st.plotly_chart(fig_bf, use_container_width=True)
@@ -551,11 +598,11 @@ with tab_hs:
         ))
         fig_net.update_layout(
             font=CHART_FONT,
-            plot_bgcolor='white',
-            paper_bgcolor='white',
+            plot_bgcolor=COLOR_BG_SURFACE,
+            paper_bgcolor=COLOR_BG_SURFACE,
             yaxis=dict(title=''),
             xaxis=dict(title='緑=黒字 ／ 赤=赤字', tickformat=',.0f', ticksuffix=' 億円', gridcolor=GRID_COLOR),
-            height=560,
+            height=580,
             showlegend=False,
             margin=dict(t=40, l=10, r=10, b=10)
         )
@@ -607,14 +654,15 @@ with tab_country:
 
     df_c_summary = df_c_summary.sort_values(by='取引規模合計', ascending=False).drop(columns=['取引規模合計']).reset_index(drop=True)
 
+    # ダークテーマ対応のテーブルスタイリング
     st.dataframe(
         df_c_summary.style.format({
             '輸出額（億円）': '{:,.1f}',
             '輸入額（億円）': '{:,.1f}',
             '収支差額（億円）': '{:+,.1f}'
         }).map(
-            lambda v: f'color: {SURPLUS_COLOR}; font-weight:600' if v == '黒字'
-            else f'color: {DEFICIT_COLOR}; font-weight:600',
+            lambda v: f'color: {SURPLUS_COLOR}; font-weight:700' if v == '黒字'
+            else f'color: {DEFICIT_COLOR}; font-weight:700',
             subset=['判定']
         ),
         use_container_width=True,
@@ -628,3 +676,4 @@ with tab_country:
         file_name=f"trade_summary_by_country_{selected_table_period}.csv",
         mime="text/csv"
     )
+```
