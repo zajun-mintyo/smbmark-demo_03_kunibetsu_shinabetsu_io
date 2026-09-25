@@ -36,18 +36,35 @@ NET_LINE_COLOR = TEXT_PRIMARY  # 収支差額ライン：明るいグレー
 GRID_COLOR = BORDER_COLOR
 CHIP_BG = "#0F131A"
 
+# --- 立体感・光沢演出用 ---
+CARD_GRAD = "linear-gradient(155deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 40%), linear-gradient(155deg, #1B212C 0%, #10141B 100%)"
+CARD_GRAD_HOVER = "linear-gradient(155deg, rgba(34,230,160,0.10) 0%, rgba(255,255,255,0) 45%), linear-gradient(155deg, #1E2530 0%, #12161D 100%)"
+CHIP_GRAD = "linear-gradient(180deg, #171D26 0%, #0D1017 100%)"
+GLASS_BORDER = "rgba(255,255,255,0.07)"
+SHADOW_CARD = "0 10px 28px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05)"
+SHADOW_CARD_HOVER = "0 16px 36px rgba(0,0,0,0.55), 0 0 0 1px rgba(34,230,160,0.30), inset 0 1px 0 rgba(255,255,255,0.06)"
+GLOW_ACCENT = "0 4px 18px rgba(34,230,160,0.45), 0 0 0 1px rgba(34,230,160,0.25) inset"
+
 CHART_FONT = dict(family="Helvetica, Arial, sans-serif", color=TEXT_PRIMARY)
 
 # ----------------- グローバルCSS -----------------
 st.markdown(f"""
 <style>
-    /* ページ全体・サイドバーの背景をダークトーンに */
+    /* ページ全体：微光のにじむグラデーション背景 */
     .stApp {{
-        background-color: {BG_MAIN};
+        background:
+            radial-gradient(1100px 520px at 8% -8%, rgba(34,230,160,0.08), transparent 60%),
+            radial-gradient(900px 480px at 96% 8%, rgba(96,165,250,0.06), transparent 55%),
+            radial-gradient(1200px 800px at 50% 110%, rgba(34,230,160,0.04), transparent 60%),
+            {BG_MAIN};
     }}
     [data-testid="stSidebar"] {{
-        background-color: {BG_CARD};
-        border-right: 1px solid {BORDER_COLOR};
+        background: linear-gradient(180deg, #141922 0%, #0E1218 100%);
+        border-right: 1px solid {GLASS_BORDER};
+        box-shadow: 6px 0 24px rgba(0,0,0,0.35);
+    }}
+    [data-testid="stSidebar"] > div:first-child {{
+        background: transparent;
     }}
     .block-container {{
         padding-top: 1.5rem;
@@ -60,30 +77,43 @@ st.markdown(f"""
         font-weight: 700;
         letter-spacing: -0.01em;
     }}
-    /* KPIカード */
+    h1 {{
+        background: linear-gradient(90deg, {TEXT_PRIMARY} 0%, #C7D6E8 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }}
+    /* KPIカード：グラデーション＋二重シャドウでガラス質感 */
     .kpi-card {{
-        background: {BG_CARD};
-        border: 1px solid {BORDER_COLOR};
-        border-radius: 14px;
-        padding: 18px 20px;
+        background: {CARD_GRAD};
+        border: 1px solid {GLASS_BORDER};
+        border-radius: 16px;
+        padding: 20px 22px;
         height: 100%;
-        transition: border-color 0.15s ease, background-color 0.15s ease;
+        box-shadow: {SHADOW_CARD};
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
     }}
     .kpi-card:hover {{
-        background: {BG_CARD_HOVER};
-        border-color: {ACCENT};
+        background: {CARD_GRAD_HOVER};
+        box-shadow: {SHADOW_CARD_HOVER};
+        transform: translateY(-3px);
     }}
     .kpi-label {{
         font-size: 0.80rem;
         color: {TEXT_MUTED};
         font-weight: 600;
         margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
     }}
     .kpi-value {{
-        font-size: 1.7rem;
+        font-size: 1.75rem;
         font-weight: 700;
         color: {TEXT_PRIMARY};
         line-height: 1.2;
+        text-shadow: 0 2px 12px rgba(0,0,0,0.35);
     }}
     .kpi-sub {{
         font-size: 0.78rem;
@@ -92,21 +122,23 @@ st.markdown(f"""
     }}
     .badge-surplus {{
         display: inline-block;
-        background: {ACCENT_SOFT};
+        background: linear-gradient(135deg, rgba(34,230,160,0.28), rgba(34,230,160,0.06));
         color: {SURPLUS_COLOR};
         font-weight: 700;
-        padding: 3px 12px;
+        padding: 4px 14px;
         border-radius: 999px;
         font-size: 0.9rem;
+        box-shadow: 0 0 0 1px rgba(34,230,160,0.30), 0 4px 14px rgba(34,230,160,0.18);
     }}
     .badge-deficit {{
         display: inline-block;
-        background: rgba(248,113,113,0.14);
+        background: linear-gradient(135deg, rgba(248,113,113,0.28), rgba(248,113,113,0.06));
         color: {DEFICIT_COLOR};
         font-weight: 700;
-        padding: 3px 12px;
+        padding: 4px 14px;
         border-radius: 999px;
         font-size: 0.9rem;
+        box-shadow: 0 0 0 1px rgba(248,113,113,0.30), 0 4px 14px rgba(248,113,113,0.16);
     }}
     .section-caption {{
         color: {TEXT_MUTED};
@@ -119,16 +151,16 @@ st.markdown(f"""
         bottom: 25px;
         right: 30px;
         z-index: 9999;
-        background-color: {ACCENT};
+        background: linear-gradient(155deg, #3CF4B8 0%, {ACCENT} 55%, {ACCENT_HOVER} 100%);
         color: {BG_MAIN} !important;
         border: none;
         border-radius: 50%;
-        width: 46px;
-        height: 46px;
+        width: 48px;
+        height: 48px;
         font-size: 20px;
         font-weight: bold;
         cursor: pointer;
-        box-shadow: 0 4px 14px rgba(34,230,160,0.35);
+        box-shadow: {GLOW_ACCENT};
         transition: all 0.2s ease;
         display: flex;
         align-items: center;
@@ -136,23 +168,24 @@ st.markdown(f"""
         text-decoration: none !important;
     }}
     .scroll-top-btn:hover {{
-        background-color: {ACCENT_HOVER};
-        transform: translateY(-3px);
+        box-shadow: 0 6px 26px rgba(34,230,160,0.65), 0 0 0 1px rgba(34,230,160,0.4) inset;
+        transform: translateY(-3px) scale(1.04);
     }}
     #top-anchor {{ position: absolute; top: 0; left: 0; }}
 
-    /* タブ：セグメントコントロール風に強調 */
+    /* タブ：グラデーション＋グロー付きセグメントコントロール */
     .stTabs [data-baseweb="tab-list"] {{
         gap: 4px;
-        background-color: {BG_CARD};
-        border: 1px solid {BORDER_COLOR};
+        background: linear-gradient(180deg, #151B24 0%, #10141B 100%);
+        border: 1px solid {GLASS_BORDER};
         padding: 6px;
-        border-radius: 12px;
+        border-radius: 14px;
         margin-bottom: 4px;
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
     }}
     .stTabs [data-baseweb="tab"] {{
         height: 46px;
-        border-radius: 8px;
+        border-radius: 10px;
         padding: 0 22px;
         background-color: transparent;
         font-weight: 600;
@@ -166,12 +199,12 @@ st.markdown(f"""
     }}
     .stTabs [data-baseweb="tab"]:hover {{
         color: {TEXT_PRIMARY};
-        background-color: {BG_CARD_HOVER};
+        background-color: rgba(255,255,255,0.04);
     }}
     .stTabs [aria-selected="true"] {{
-        background-color: {ACCENT_SOFT} !important;
+        background: linear-gradient(155deg, rgba(34,230,160,0.22), rgba(34,230,160,0.06)) !important;
         color: {ACCENT} !important;
-        box-shadow: inset 0 0 0 1px rgba(34,230,160,0.35);
+        box-shadow: inset 0 0 0 1px rgba(34,230,160,0.40), 0 4px 14px rgba(34,230,160,0.20);
     }}
     .stTabs [data-baseweb="tab-highlight"] {{
         background-color: transparent;
@@ -188,12 +221,12 @@ st.markdown(f"""
         font-size: 0.80rem;
         font-weight: 700;
         margin-top: 8px;
-        padding: 2px 8px;
+        padding: 3px 10px;
         border-radius: 999px;
     }}
-    .delta-up {{ color: {SURPLUS_COLOR}; background: {ACCENT_SOFT}; }}
-    .delta-down {{ color: {DEFICIT_COLOR}; background: rgba(248,113,113,0.12); }}
-    .delta-flat {{ color: {TEXT_MUTED}; background: rgba(139,147,161,0.12); }}
+    .delta-up {{ color: {SURPLUS_COLOR}; background: linear-gradient(135deg, rgba(34,230,160,0.22), rgba(34,230,160,0.04)); box-shadow: 0 0 0 1px rgba(34,230,160,0.22); }}
+    .delta-down {{ color: {DEFICIT_COLOR}; background: linear-gradient(135deg, rgba(248,113,113,0.22), rgba(248,113,113,0.04)); box-shadow: 0 0 0 1px rgba(248,113,113,0.22); }}
+    .delta-flat {{ color: {TEXT_MUTED}; background: rgba(139,147,161,0.12); box-shadow: 0 0 0 1px rgba(139,147,161,0.18); }}
 
     /* フィルターチップ */
     .filter-chip-label {{
@@ -206,18 +239,21 @@ st.markdown(f"""
     }}
     .stButton > button {{
         border-radius: 999px;
-        border: 1px solid {BORDER_COLOR};
-        background-color: {CHIP_BG};
+        border: 1px solid {GLASS_BORDER};
+        background: {CHIP_GRAD};
         color: {TEXT_PRIMARY};
         font-size: 0.82rem;
         font-weight: 600;
-        padding: 2px 6px;
+        padding: 3px 8px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04);
         transition: all 0.15s ease;
     }}
     .stButton > button:hover {{
-        border-color: {ACCENT};
+        border-color: rgba(34,230,160,0.55);
         color: {ACCENT};
-        background-color: {ACCENT_SOFT};
+        background: linear-gradient(180deg, rgba(34,230,160,0.16) 0%, #0D1017 100%);
+        box-shadow: 0 4px 16px rgba(34,230,160,0.22), inset 0 1px 0 rgba(255,255,255,0.05);
+        transform: translateY(-1px);
     }}
     .stButton > button p {{
         color: inherit;
@@ -225,19 +261,39 @@ st.markdown(f"""
 
     /* サイドバーのセレクト・マルチセレクト・ラジオ類 */
     [data-testid="stSidebar"] [data-baseweb="select"] > div {{
-        background-color: {CHIP_BG};
-        border-color: {BORDER_COLOR};
+        background: {CHIP_GRAD};
+        border-color: {GLASS_BORDER};
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.35);
     }}
     span[data-baseweb="tag"] {{
-        background-color: {ACCENT_SOFT} !important;
+        background: linear-gradient(135deg, rgba(34,230,160,0.30), rgba(34,230,160,0.10)) !important;
         color: {ACCENT} !important;
+        box-shadow: 0 0 0 1px rgba(34,230,160,0.30), 0 2px 8px rgba(34,230,160,0.15);
     }}
 
     /* データフレーム */
     [data-testid="stDataFrame"] {{
-        border: 1px solid {BORDER_COLOR};
-        border-radius: 10px;
+        border: 1px solid {GLASS_BORDER};
+        border-radius: 12px;
         overflow: hidden;
+        box-shadow: {SHADOW_CARD};
+    }}
+
+    /* Plotlyチャートをガラスカードで包む */
+    [data-testid="stPlotlyChart"] {{
+        background: {CARD_GRAD};
+        border: 1px solid {GLASS_BORDER};
+        border-radius: 18px;
+        padding: 14px 10px 4px 10px;
+        box-shadow: {SHADOW_CARD};
+    }}
+
+    /* 区切り線をグラデーションに */
+    hr {{
+        border: none;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, {GLASS_BORDER} 20%, {GLASS_BORDER} 80%, transparent);
+        margin: 1.2rem 0;
     }}
 </style>
 <div id="top-anchor"></div>
@@ -451,32 +507,36 @@ with tab_trend:
         fig_trend = go.Figure()
         fig_trend.add_trace(go.Bar(
             x=df_trend['年'], y=df_trend['輸出額'],
-            name='輸出額', marker_color=EXPORT_COLOR,
+            name='輸出額',
+            marker=dict(color=EXPORT_COLOR, line=dict(color='rgba(255,255,255,0.18)', width=1)),
             hovertemplate='%{x}年 輸出額: %{y:,.1f} 億円<extra></extra>'
         ))
         fig_trend.add_trace(go.Bar(
             x=df_trend['年'], y=df_trend['輸入額'],
-            name='輸入額', marker_color=IMPORT_COLOR,
+            name='輸入額',
+            marker=dict(color=IMPORT_COLOR, line=dict(color='rgba(255,255,255,0.18)', width=1)),
             hovertemplate='%{x}年 輸入額: %{y:,.1f} 億円<extra></extra>'
         ))
         fig_trend.add_trace(go.Scatter(
             x=df_trend['年'], y=df_trend['収支差額'],
             name='収支差額（輸出－輸入）',
             mode='lines+markers',
-            line=dict(color=NET_LINE_COLOR, width=2.5),
-            marker=dict(size=7),
+            line=dict(color=NET_LINE_COLOR, width=2.5, shape='spline'),
+            marker=dict(size=8, color=BG_MAIN, line=dict(color=NET_LINE_COLOR, width=2)),
+            fill='tozeroy',
+            fillcolor='rgba(230,233,239,0.08)',
             hovertemplate='%{x}年 収支差額: %{y:+,.1f} 億円<extra></extra>'
         ))
         fig_trend.update_layout(
             barmode='group',
             font=CHART_FONT,
-            plot_bgcolor=BG_CARD,
-            paper_bgcolor=BG_CARD,
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
             xaxis=dict(title='年', tickmode='linear', gridcolor=GRID_COLOR, showline=True, linecolor=GRID_COLOR),
             yaxis=dict(title=UNIT_LABEL, tickformat=',.0f', ticksuffix=' 億円', gridcolor=GRID_COLOR),
             hovermode='x unified',
             height=380,
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, bgcolor="rgba(255,255,255,0.03)", bordercolor="rgba(255,255,255,0.08)", borderwidth=1),
             margin=dict(t=40, l=10, r=10, b=10)
         )
         st.plotly_chart(fig_trend, use_container_width=True)
@@ -503,30 +563,35 @@ with tab_trend:
         fig_m = go.Figure()
         fig_m.add_trace(go.Scatter(
             x=df_monthly['年月'], y=df_monthly['輸出額'],
-            name='輸出額', mode='lines', line=dict(color=EXPORT_COLOR, width=2),
+            name='輸出額', mode='lines', line=dict(color=EXPORT_COLOR, width=2.5, shape='spline'),
+            fill='tozeroy', fillcolor='rgba(96,165,250,0.10)',
             hovertemplate='%{x} 輸出額: %{y:,.1f} 億円<extra></extra>'
         ))
         fig_m.add_trace(go.Scatter(
             x=df_monthly['年月'], y=df_monthly['輸入額'],
-            name='輸入額', mode='lines', line=dict(color=IMPORT_COLOR, width=2),
+            name='輸入額', mode='lines', line=dict(color=IMPORT_COLOR, width=2.5, shape='spline'),
+            fill='tozeroy', fillcolor='rgba(251,191,36,0.08)',
             hovertemplate='%{x} 輸入額: %{y:,.1f} 億円<extra></extra>'
         ))
         fig_m.add_trace(go.Bar(
             x=df_monthly['年月'], y=df_monthly['収支差額'],
             name='収支差額',
-            marker_color=np.where(df_monthly['収支差額'] >= 0, SURPLUS_COLOR, DEFICIT_COLOR),
+            marker=dict(
+                color=np.where(df_monthly['収支差額'] >= 0, SURPLUS_COLOR, DEFICIT_COLOR),
+                line=dict(color='rgba(255,255,255,0.15)', width=0.5)
+            ),
             hovertemplate='%{x} 収支差額: %{y:+,.1f} 億円<extra></extra>',
-            opacity=0.55
+            opacity=0.6
         ))
         fig_m.update_layout(
             font=CHART_FONT,
-            plot_bgcolor=BG_CARD,
-            paper_bgcolor=BG_CARD,
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
             xaxis=dict(title='年月', tickangle=-45, gridcolor=GRID_COLOR),
             yaxis=dict(title=UNIT_LABEL, tickformat=',.0f', ticksuffix=' 億円', gridcolor=GRID_COLOR),
             hovermode='x unified',
             height=380,
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, bgcolor="rgba(255,255,255,0.03)", bordercolor="rgba(255,255,255,0.08)", borderwidth=1),
             margin=dict(t=40, l=10, r=10, b=10)
         )
         st.plotly_chart(fig_m, use_container_width=True)
@@ -564,7 +629,7 @@ with tab_hs:
             x=-df_hs_top['輸入額'],
             orientation='h',
             name='輸入額',
-            marker_color=IMPORT_COLOR,
+            marker=dict(color=IMPORT_COLOR, line=dict(color='rgba(255,255,255,0.15)', width=0.5)),
             hovertemplate='%{y}<br>輸入額: %{customdata:,.1f} 億円<extra></extra>',
             customdata=df_hs_top['輸入額']
         ))
@@ -573,18 +638,18 @@ with tab_hs:
             x=df_hs_top['輸出額'],
             orientation='h',
             name='輸出額',
-            marker_color=EXPORT_COLOR,
+            marker=dict(color=EXPORT_COLOR, line=dict(color='rgba(255,255,255,0.15)', width=0.5)),
             hovertemplate='%{y}<br>輸出額: %{x:,.1f} 億円<extra></extra>'
         ))
         fig_bf.update_layout(
             barmode='relative',
             font=CHART_FONT,
-            plot_bgcolor=BG_CARD,
-            paper_bgcolor=BG_CARD,
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
             yaxis=dict(autorange='reversed', title=''),
             xaxis=dict(title='← 輸入超過 ｜ 輸出超過 →', tickformat=',.0f', ticksuffix=' 億円', gridcolor=GRID_COLOR),
             height=560,
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, bgcolor="rgba(255,255,255,0.03)", bordercolor="rgba(255,255,255,0.08)", borderwidth=1),
             margin=dict(t=40, l=10, r=10, b=10)
         )
         st.plotly_chart(fig_bf, use_container_width=True)
@@ -597,14 +662,17 @@ with tab_hs:
             y=df_hs_top_sorted['HS品目大分類'],
             x=df_hs_top_sorted['貿易収支（差額）'],
             orientation='h',
-            marker_color=np.where(df_hs_top_sorted['貿易収支（差額）'] >= 0, SURPLUS_COLOR, DEFICIT_COLOR),
+            marker=dict(
+                color=np.where(df_hs_top_sorted['貿易収支（差額）'] >= 0, SURPLUS_COLOR, DEFICIT_COLOR),
+                line=dict(color='rgba(255,255,255,0.15)', width=0.5)
+            ),
             hovertemplate='%{y}<br>収支差額: %{x:+,.1f} 億円<extra></extra>',
             name='収支差額'
         ))
         fig_net.update_layout(
             font=CHART_FONT,
-            plot_bgcolor=BG_CARD,
-            paper_bgcolor=BG_CARD,
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
             yaxis=dict(title=''),
             xaxis=dict(title='緑=黒字 ／ 赤=赤字', tickformat=',.0f', ticksuffix=' 億円', gridcolor=GRID_COLOR),
             height=560,
