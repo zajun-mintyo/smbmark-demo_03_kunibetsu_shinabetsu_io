@@ -345,16 +345,14 @@ st.markdown(f"""
         background: rgba(34,230,160,0.14) !important;
         color: #B8FFE4 !important;
     }}
-    span[data-baseweb="tag"] {{
+    /* 国名などの選択チップ（実際の属性は data-tag） */
+    span[data-tag] {{
         background: linear-gradient(135deg, #0E7A4D 0%, #0A5C3B 100%) !important;
-        color: #EAFBF3 !important;
-        font-weight: 700 !important;
         box-shadow: 0 0 0 1px rgba(34,230,160,0.55), 0 3px 12px rgba(0,0,0,0.35);
+        border-radius: 8px;
     }}
-    /* 背景色・文字色そのものが上書きできない場合でも視認性を確保するため、
-       文字の周囲に黒いフチ（アウトライン）を必ず重ねる */
-    span[data-baseweb="tag"] *,
-    div[data-baseweb="tag"] * {{
+    span[data-tag],
+    span[data-tag] * {{
         color: #EAFBF3 !important;
         fill: #EAFBF3 !important;
         font-weight: 800 !important;
