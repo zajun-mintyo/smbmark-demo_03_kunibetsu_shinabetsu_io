@@ -48,6 +48,26 @@ TOP_STRIPE = "linear-gradient(90deg, {0} 0%, rgba(255,255,255,0.35) 55%, transpa
 
 CHART_FONT = dict(family="Helvetica, Arial, sans-serif", color=TEXT_PRIMARY)
 
+# --- 棒グラフ用グラデーションカラー ---
+def _lerp_hex(c1: str, c2: str, t: float) -> str:
+    c1, c2 = c1.lstrip('#'), c2.lstrip('#')
+    r1, g1, b1 = int(c1[0:2], 16), int(c1[2:4], 16), int(c1[4:6], 16)
+    r2, g2, b2 = int(c2[0:2], 16), int(c2[2:4], 16), int(c2[4:6], 16)
+    r = round(r1 + (r2 - r1) * t)
+    g = round(g1 + (g2 - g1) * t)
+    b = round(b1 + (b2 - b1) * t)
+    return f'#{r:02X}{g:02X}{b:02X}'
+
+def gradient_colors(c_from: str, c_to: str, n: int) -> list:
+    """n本の棒に、c_fromからc_toへ滑らかに変化する色を割り当てる"""
+    if n <= 1:
+        return [c_to]
+    return [_lerp_hex(c_from, c_to, i / (n - 1)) for i in range(n)]
+
+EXPORT_GRAD = ("#1E4E8C", "#8FC7FF")   # 輸出：深いブルー → 明るいスカイブルー
+IMPORT_GRAD = ("#8A5A12", "#FFD873")   # 輸入：深いアンバー → 明るいゴールド
+
+
 
 
 # ----------------- グローバルCSS -----------------
@@ -286,6 +306,41 @@ st.markdown(f"""
         background: {CHIP_GRAD};
         border-color: {GLASS_BORDER};
         box-shadow: inset 0 1px 4px rgba(0,0,0,0.5);
+    }}
+    /* セレクト内の入力文字・プレースホルダーのコントラストを確保 */
+    [data-baseweb="select"] input {{
+        color: {TEXT_PRIMARY} !important;
+        -webkit-text-fill-color: {TEXT_PRIMARY} !important;
+        caret-color: {TEXT_PRIMARY} !important;
+    }}
+    [data-baseweb="select"] div[class*="placeholder"],
+    [data-baseweb="select"] > div > div:first-child {{
+        color: {TEXT_MUTED} !important;
+    }}
+    [data-baseweb="select"] svg {{
+        fill: {TEXT_MUTED} !important;
+    }}
+    /* 開いたドロップダウン（候補一覧）のコントラストを確保 */
+    div[data-baseweb="popover"] [data-baseweb="menu"],
+    div[data-baseweb="popover"] ul {{
+        background: {BG_CARD} !important;
+        border: 1px solid {GLASS_BORDER} !important;
+        box-shadow: {SHADOW_CARD};
+    }}
+    li[role="option"] {{
+        color: {TEXT_PRIMARY} !important;
+        background: transparent !important;
+    }}
+    li[role="option"] * {{
+        color: inherit !important;
+    }}
+    li[role="option"]:hover {{
+        background: {ACCENT_SOFT} !important;
+        color: #B8FFE4 !important;
+    }}
+    li[aria-selected="true"] {{
+        background: rgba(34,230,160,0.14) !important;
+        color: #B8FFE4 !important;
     }}
     span[data-baseweb="tag"] {{
         background: linear-gradient(135deg, rgba(34,230,160,0.45), rgba(34,230,160,0.15)) !important;
@@ -531,13 +586,13 @@ with tab_trend:
         fig_trend.add_trace(go.Bar(
             x=df_trend['年'], y=df_trend['輸出額'],
             name='輸出額',
-            marker=dict(color=EXPORT_COLOR, line=dict(color='rgba(255,255,255,0.18)', width=1)),
+            marker=dict(color=gradient_colors(*EXPORT_GRAD, len(df_trend)), line=dict(color='rgba(255,255,255,0.28)', width=1)),
             hovertemplate='%{x}年 輸出額: %{y:,.1f} 億円<extra></extra>'
         ))
         fig_trend.add_trace(go.Bar(
             x=df_trend['年'], y=df_trend['輸入額'],
             name='輸入額',
-            marker=dict(color=IMPORT_COLOR, line=dict(color='rgba(255,255,255,0.18)', width=1)),
+            marker=dict(color=gradient_colors(*IMPORT_GRAD, len(df_trend)), line=dict(color='rgba(255,255,255,0.28)', width=1)),
             hovertemplate='%{x}年 輸入額: %{y:,.1f} 億円<extra></extra>'
         ))
         fig_trend.add_trace(go.Scatter(
@@ -652,7 +707,7 @@ with tab_hs:
             x=-df_hs_top['輸入額'],
             orientation='h',
             name='輸入額',
-            marker=dict(color=IMPORT_COLOR, line=dict(color='rgba(255,255,255,0.15)', width=0.5)),
+            marker=dict(color=gradient_colors(*IMPORT_GRAD, len(df_hs_top)), line=dict(color='rgba(255,255,255,0.25)', width=0.5)),
             hovertemplate='%{y}<br>輸入額: %{customdata:,.1f} 億円<extra></extra>',
             customdata=df_hs_top['輸入額']
         ))
@@ -661,7 +716,7 @@ with tab_hs:
             x=df_hs_top['輸出額'],
             orientation='h',
             name='輸出額',
-            marker=dict(color=EXPORT_COLOR, line=dict(color='rgba(255,255,255,0.15)', width=0.5)),
+            marker=dict(color=gradient_colors(*EXPORT_GRAD, len(df_hs_top)), line=dict(color='rgba(255,255,255,0.25)', width=0.5)),
             hovertemplate='%{y}<br>輸出額: %{x:,.1f} 億円<extra></extra>'
         ))
         fig_bf.update_layout(
