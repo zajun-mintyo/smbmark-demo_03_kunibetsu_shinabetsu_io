@@ -67,6 +67,9 @@ def gradient_colors(c_from: str, c_to: str, n: int) -> list:
 EXPORT_GRAD = ("#1E4E8C", "#8FC7FF")   # 輸出：深いブルー → 明るいスカイブルー
 IMPORT_GRAD = ("#8A5A12", "#FFD873")   # 輸入：深いアンバー → 明るいゴールド
 
+# --- グラフ右上に出るズーム/パン等のツールバーを非表示に ---
+PLOTLY_CONFIG = {"displayModeBar": False}
+
 
 
 
@@ -348,6 +351,10 @@ st.markdown(f"""
         font-weight: 700 !important;
         box-shadow: 0 0 0 1px rgba(34,230,160,0.55), 0 3px 12px rgba(34,230,160,0.30);
     }}
+    span[data-baseweb="tag"] * {{
+        color: #063324 !important;
+        fill: #063324 !important;
+    }}
 
     /* データフレーム */
     [data-testid="stDataFrame"] {{
@@ -617,7 +624,7 @@ with tab_trend:
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, bgcolor="rgba(255,255,255,0.03)", bordercolor="rgba(255,255,255,0.08)", borderwidth=1),
             margin=dict(t=40, l=10, r=10, b=10)
         )
-        st.plotly_chart(fig_trend, use_container_width=True)
+        st.plotly_chart(fig_trend, use_container_width=True, config=PLOTLY_CONFIG)
 
     else:  # 月次推移
         monthly_records = []
@@ -672,7 +679,7 @@ with tab_trend:
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, bgcolor="rgba(255,255,255,0.03)", bordercolor="rgba(255,255,255,0.08)", borderwidth=1),
             margin=dict(t=40, l=10, r=10, b=10)
         )
-        st.plotly_chart(fig_m, use_container_width=True)
+        st.plotly_chart(fig_m, use_container_width=True, config=PLOTLY_CONFIG)
 
 # ===== タブ2: 品目別内訳 =====
 with tab_hs:
@@ -730,7 +737,7 @@ with tab_hs:
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, bgcolor="rgba(255,255,255,0.03)", bordercolor="rgba(255,255,255,0.08)", borderwidth=1),
             margin=dict(t=40, l=10, r=10, b=10)
         )
-        st.plotly_chart(fig_bf, use_container_width=True)
+        st.plotly_chart(fig_bf, use_container_width=True, config=PLOTLY_CONFIG)
 
     with col_chart2:
         st.markdown("##### 品目別 純収支（輸出－輸入）")
@@ -757,7 +764,7 @@ with tab_hs:
             showlegend=False,
             margin=dict(t=40, l=10, r=10, b=10)
         )
-        st.plotly_chart(fig_net, use_container_width=True)
+        st.plotly_chart(fig_net, use_container_width=True, config=PLOTLY_CONFIG)
 
     st.markdown(
         '<div class="section-caption">取引規模（輸出＋輸入）上位20品目を表示しています。</div>',
