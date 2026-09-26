@@ -346,14 +346,14 @@ st.markdown(f"""
         color: #B8FFE4 !important;
     }}
     span[data-baseweb="tag"] {{
-        background: linear-gradient(135deg, rgba(34,230,160,0.45), rgba(34,230,160,0.15)) !important;
-        color: #063324 !important;
+        background: linear-gradient(135deg, #0E7A4D 0%, #0A5C3B 100%) !important;
+        color: #EAFBF3 !important;
         font-weight: 700 !important;
-        box-shadow: 0 0 0 1px rgba(34,230,160,0.55), 0 3px 12px rgba(34,230,160,0.30);
+        box-shadow: 0 0 0 1px rgba(34,230,160,0.55), 0 3px 12px rgba(0,0,0,0.35);
     }}
     span[data-baseweb="tag"] * {{
-        color: #063324 !important;
-        fill: #063324 !important;
+        color: #EAFBF3 !important;
+        fill: #EAFBF3 !important;
     }}
 
     /* データフレーム */
@@ -590,18 +590,31 @@ with tab_trend:
         df_trend['収支差額'] = df_trend['輸出額'] - df_trend['輸入額']
 
         fig_trend = go.Figure()
-        fig_trend.add_trace(go.Bar(
-            x=df_trend['年'], y=df_trend['輸出額'],
-            name='輸出額',
-            marker=dict(color=gradient_colors(*EXPORT_GRAD, len(df_trend)), line=dict(color='rgba(255,255,255,0.28)', width=1)),
-            hovertemplate='%{x}年 輸出額: %{y:,.1f} 億円<extra></extra>'
-        ))
-        fig_trend.add_trace(go.Bar(
-            x=df_trend['年'], y=df_trend['輸入額'],
-            name='輸入額',
-            marker=dict(color=gradient_colors(*IMPORT_GRAD, len(df_trend)), line=dict(color='rgba(255,255,255,0.28)', width=1)),
-            hovertemplate='%{x}年 輸入額: %{y:,.1f} 億円<extra></extra>'
-        ))
+
+        # 各年の棒1本ごとに「下から上」へグラデーションをかけるため、
+        # 極薄の帯を縦に積み重ねて1本の棒を再現する
+        N_BANDS = 24
+        export_bands = gradient_colors(*EXPORT_GRAD, N_BANDS)  # 下（濃い）→上（明るい）
+        import_bands = gradient_colors(*IMPORT_GRAD, N_BANDS)
+
+        for i in range(N_BANDS):
+            fig_trend.add_trace(go.Bar(
+                x=df_trend['年'], y=df_trend['輸出額'] / N_BANDS,
+                name='輸出額', legendgroup='輸出額', offsetgroup='輸出額',
+                showlegend=(i == 0),
+                marker=dict(color=export_bands[i], line=dict(width=0)),
+                customdata=df_trend['輸出額'],
+                hovertemplate='%{x}年 輸出額: %{customdata:,.1f} 億円<extra></extra>'
+            ))
+        for i in range(N_BANDS):
+            fig_trend.add_trace(go.Bar(
+                x=df_trend['年'], y=df_trend['輸入額'] / N_BANDS,
+                name='輸入額', legendgroup='輸入額', offsetgroup='輸入額',
+                showlegend=(i == 0),
+                marker=dict(color=import_bands[i], line=dict(width=0)),
+                customdata=df_trend['輸入額'],
+                hovertemplate='%{x}年 輸入額: %{customdata:,.1f} 億円<extra></extra>'
+            ))
         fig_trend.add_trace(go.Scatter(
             x=df_trend['年'], y=df_trend['収支差額'],
             name='収支差額（輸出－輸入）',
@@ -613,7 +626,8 @@ with tab_trend:
             hovertemplate='%{x}年 収支差額: %{y:+,.1f} 億円<extra></extra>'
         ))
         fig_trend.update_layout(
-            barmode='group',
+            barmode='stack',
+            bargap=0.25,
             font=CHART_FONT,
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
