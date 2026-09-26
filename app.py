@@ -351,9 +351,19 @@ st.markdown(f"""
         font-weight: 700 !important;
         box-shadow: 0 0 0 1px rgba(34,230,160,0.55), 0 3px 12px rgba(0,0,0,0.35);
     }}
-    span[data-baseweb="tag"] * {{
+    /* 背景色・文字色そのものが上書きできない場合でも視認性を確保するため、
+       文字の周囲に黒いフチ（アウトライン）を必ず重ねる */
+    span[data-baseweb="tag"] *,
+    div[data-baseweb="tag"] * {{
         color: #EAFBF3 !important;
         fill: #EAFBF3 !important;
+        font-weight: 800 !important;
+        text-shadow:
+            -1px -1px 0 rgba(0,0,0,0.95),
+             1px -1px 0 rgba(0,0,0,0.95),
+            -1px  1px 0 rgba(0,0,0,0.95),
+             1px  1px 0 rgba(0,0,0,0.95),
+             0 0 5px rgba(0,0,0,0.9) !important;
     }}
 
     /* データフレーム */
@@ -633,7 +643,7 @@ with tab_trend:
             paper_bgcolor='rgba(0,0,0,0)',
             xaxis=dict(title='年', tickmode='linear', gridcolor=GRID_COLOR, showline=True, linecolor=GRID_COLOR),
             yaxis=dict(title=UNIT_LABEL, tickformat=',.0f', ticksuffix=' 億円', gridcolor=GRID_COLOR),
-            hovermode='x unified',
+            hovermode='closest',
             height=380,
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, bgcolor="rgba(255,255,255,0.03)", bordercolor="rgba(255,255,255,0.08)", borderwidth=1),
             margin=dict(t=40, l=10, r=10, b=10)
@@ -723,25 +733,38 @@ with tab_hs:
     with col_chart1:
         st.markdown("##### 輸出入バタフライチャート")
         fig_bf = go.Figure()
-        fig_bf.add_trace(go.Bar(
-            y=df_hs_top['HS品目大分類'],
-            x=-df_hs_top['輸入額'],
-            orientation='h',
-            name='輸入額',
-            marker=dict(color=gradient_colors(*IMPORT_GRAD, len(df_hs_top)), line=dict(color='rgba(255,255,255,0.25)', width=0.5)),
-            hovertemplate='%{y}<br>輸入額: %{customdata:,.1f} 億円<extra></extra>',
-            customdata=df_hs_top['輸入額']
-        ))
-        fig_bf.add_trace(go.Bar(
-            y=df_hs_top['HS品目大分類'],
-            x=df_hs_top['輸出額'],
-            orientation='h',
-            name='輸出額',
-            marker=dict(color=gradient_colors(*EXPORT_GRAD, len(df_hs_top)), line=dict(color='rgba(255,255,255,0.25)', width=0.5)),
-            hovertemplate='%{y}<br>輸出額: %{x:,.1f} 億円<extra></extra>'
-        ))
+
+        # 横向きの棒なので「軸に近い側→先端」へ向かってグラデーションをかける
+        N_BANDS_H = 24
+        import_bands_h = gradient_colors(*IMPORT_GRAD, N_BANDS_H)  # 軸側（濃い）→先端（明るい）
+        export_bands_h = gradient_colors(*EXPORT_GRAD, N_BANDS_H)
+
+        for i in range(N_BANDS_H):
+            fig_bf.add_trace(go.Bar(
+                y=df_hs_top['HS品目大分類'],
+                x=-df_hs_top['輸入額'] / N_BANDS_H,
+                orientation='h',
+                name='輸入額', legendgroup='輸入額',
+                showlegend=(i == 0),
+                marker=dict(color=import_bands_h[i], line=dict(width=0)),
+                customdata=df_hs_top['輸入額'],
+                hovertemplate='%{y}<br>輸入額: %{customdata:,.1f} 億円<extra></extra>'
+            ))
+        for i in range(N_BANDS_H):
+            fig_bf.add_trace(go.Bar(
+                y=df_hs_top['HS品目大分類'],
+                x=df_hs_top['輸出額'] / N_BANDS_H,
+                orientation='h',
+                name='輸出額', legendgroup='輸出額',
+                showlegend=(i == 0),
+                marker=dict(color=export_bands_h[i], line=dict(width=0)),
+                customdata=df_hs_top['輸出額'],
+                hovertemplate='%{y}<br>輸出額: %{customdata:,.1f} 億円<extra></extra>'
+            ))
         fig_bf.update_layout(
             barmode='relative',
+            bargap=0.25,
+            hovermode='closest',
             font=CHART_FONT,
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
